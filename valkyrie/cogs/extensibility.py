@@ -1,2 +1,9 @@
-def setup(bot):
-    pass  # TODO: set up extensibility (!add_command to create commands)
+from discord.ext import commands
+
+
+class Extensibility(commands.Cog):
+    pass
+
+
+def setup(bot: commands.Bot):
+    bot.add_cog(Extensibility(bot))

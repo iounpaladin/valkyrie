@@ -1,10 +1,12 @@
 import pickle
+import threading
 
 
 class Datastore:
     def __init__(self, file):
         self.file = file
         self.data = {}
+        self.lock = threading.Lock()
 
         try:
             with open(self.file, 'rb') as f:
@@ -17,8 +19,10 @@ class Datastore:
             self.data = {}
 
     def set(self, key, value):
+        self.lock.acquire()
         self.data[key] = value
         self.save_data()
+        self.lock.release()
 
     def get(self, item):
         try:

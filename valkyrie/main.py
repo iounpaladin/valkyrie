@@ -4,6 +4,9 @@ import discord
 from discord.ext.commands import AutoShardedBot, when_mentioned_or
 from jishaku.help_command import DefaultPaginatorHelp
 
+from valkyrie.data import custom_prefixes, default_prefixes
+from valkyrie.datastore import Datastore
+
 
 class Bot(AutoShardedBot):
     async def on_message(self, msg: discord.Message):
@@ -17,7 +20,15 @@ class Bot(AutoShardedBot):
 with open('../.TOKEN') as f:
     TOKEN = f.read().rstrip()
 
-client = Bot(command_prefix=when_mentioned_or('%'),  # Set up prefix, game, and help command
+
+async def determine_prefix(bot, message):
+    guild = message.guild
+    if guild:
+        return custom_prefixes.get(guild.id) or default_prefixes
+    else:
+        return default_prefixes
+
+client = Bot(command_prefix=determine_prefix,  # Set up prefix, game, and help command
              activity=discord.Game('%help'),
              help_command=DefaultPaginatorHelp())
 
