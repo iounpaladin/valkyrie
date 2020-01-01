@@ -12,7 +12,7 @@ class Datastore:
             with open(self.file, 'rb') as f:
                 try:
                     self.data = pickle.load(f)  # Load data, or initialize data to {}
-                except pickle.PickleError:
+                except:
                     self.data = {}
                     self.save_data()
         except FileNotFoundError:

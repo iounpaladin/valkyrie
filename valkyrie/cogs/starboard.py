@@ -12,6 +12,7 @@ class Starboard(commands.Cog):
 
     @commands.group()
     async def starboard(self, ctx: commands.Context):
+        if ctx.invoked_subcommand is not None: return
         e = discord.Embed(colour=discord.Colour.purple())
         e.add_field(name="Limit", value=str(self.settings.get(ctx.guild.id)["limit"]))
         await ctx.send(embed=e)
