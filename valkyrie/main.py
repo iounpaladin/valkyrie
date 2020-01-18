@@ -4,7 +4,7 @@ import discord
 from discord.ext.commands import AutoShardedBot, when_mentioned_or
 from jishaku.help_command import DefaultPaginatorHelp
 
-from valkyrie.data import custom_prefixes, default_prefixes
+from .data import custom_prefixes, default_prefixes
 from valkyrie.datastore import Datastore
 
 
