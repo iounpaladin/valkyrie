@@ -19,7 +19,7 @@ class Bot(AutoShardedBot):
         await self.process_commands(msg)  # Resolve message
 
 
-with open('../.TOKEN') as f:
+with open('.TOKEN') as f:
     TOKEN = f.read().rstrip()
 
 
@@ -43,10 +43,11 @@ async def on_ready():  # Let user know when the bot is loaded
     print('------')
 
 
+os.chdir(os.path.join(os.getcwd(), 'valkyrie'))
 for file in os.listdir("cogs"):
     if file.endswith(".py"):
         name = file[:-3]
-        client.load_extension(f"cogs.{name}")
+        client.load_extension(f"valkyrie.cogs.{name}")
 
 client.load_extension("jishaku")
 
