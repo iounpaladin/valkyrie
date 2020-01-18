@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from datastore import Datastore
+from valkyrie.datastore import Datastore
 
 
 class Starboard(commands.Cog):
@@ -120,7 +120,7 @@ class Starboard(commands.Cog):
                 if rxn.count >= self.settings.get(data.guild_id)["limit"]:
                     msg: discord.Message = await (
                         await self.bot.fetch_channel(self.settings.get(data.guild_id)["channel"])).send(
-                        f"{self.fmt(message.content)}\n- "
+                        f"{self.fmt(message.content)}\n{' '.join([a.url for a in message.attachments])}\n- "
                         f"{message.author.mention}, {message.channel.mention}, {rxn.count} stars")
 
                     new_ = self.settings.get(data.guild_id)

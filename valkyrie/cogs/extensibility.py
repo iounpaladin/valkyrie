@@ -1,3 +1,6 @@
+import inspect
+import string
+
 import discord
 import typing
 from discord.ext import commands
@@ -15,7 +18,6 @@ class Extensibility(commands.Cog):
         self.bot = bot
         self.data = Datastore('extensibility.pkl')
         # (guild_id: int) => {(hook: str) => [(where: channel), (response: str)][]}
-        # TODO: autoresponder (message_contains_<xyz> => response)
 
     valid_hooks = """
     message_delete
@@ -100,10 +102,131 @@ class Extensibility(commands.Cog):
 
         return ""
 
+    @staticmethod
+    def canonicalize(j):
+        if isinstance(j, discord.Guild):
+            return j.name
+        elif isinstance(j, discord.User):
+            return f'{j.display_name} ({j.id})'
+        elif isinstance(j, discord.TextChannel):
+            return f'{j.name} in {j.category.name}'
+        elif isinstance(j, discord.Message):
+            return j.content
+        elif isinstance(j, list):
+            return ', '.join([Extensibility.canonicalize(x) for x in j])
+
+    async def run_hook(self, hook_name: str, args_for_hook: dict):
+        guild_id = 0
+        for i in args_for_hook.values():
+            if isinstance(i, discord.Guild):
+                guild_id = i.id
+                break
+            elif isinstance(i, list):
+                if hasattr(i[0], 'guild'):
+                    guild_id = i[0].guild.id
+                    break
+            elif hasattr(i, 'guild'):
+                guild_id = i.guild.id
+                break
+
+        for i, j in args_for_hook.items():
+            args_for_hook[i] = Extensibility.canonicalize(j)
+
+        if self.data.get(guild_id):
+            if hook_name in self.data.get(guild_id):
+                for hook in self.data.get(guild_id)[hook_name]:
+                    await (
+                        await self.bot.fetch_channel(hook[0])) \
+                        .send(
+                        string.Template(hook[1])
+                            .safe_substitute(args_for_hook)
+                    )
+
     @commands.Cog.listener()
-    async def on_message_edit(self, before, after):  # author = before.author, before = before.content, after = after.content
-        pass
+    async def on_message_delete(self, message):
+        await self.run_hook('message_delete', {"message": message})
+
+    @commands.Cog.listener()
+    async def on_bulk_message_delete(self, messages):
+        await self.run_hook('bulk_message_delete', {"messages": messages})
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        await self.run_hook('message_edit', {"before": before, "after": after, "member": before.author})
+
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        await self.run_hook('reaction_add', {"reaction": reaction, "user": user})
+
+    @commands.Cog.listener()
+    async def on_reaction_remove(self, reaction, user):
+        await self.run_hook('reaction_remove', {"reaction": reaction, "user": user})
+
+    @commands.Cog.listener()
+    async def on_reaction_clear(self, message, reactions):
+        await self.run_hook('reaction_clear', {"message": message, "reactions": reactions})
+
+    @commands.Cog.listener()
+    async def on_guild_channel_update(self, before, after):
+        await self.run_hook('guild_channel_update', {"before": before, "after": after})
+
+    @commands.Cog.listener()
+    async def on_guild_channel_pins_update(self, channel, last_pin):
+        await self.run_hook('guild_channel_pins_update', {"channel": channel, "last_pin": last_pin})
+
+    @commands.Cog.listener()
+    async def on_guild_integrations_update(self, guild):
+        await self.run_hook('guild_integrations_update', {"guild": guild})
+
+    @commands.Cog.listener()
+    async def on_webhooks_update(self, channel):
+        await self.run_hook('webhooks_update', {"channel": channel})
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        await self.run_hook('member_join', {"member": member})
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member):
+        await self.run_hook('member_remove', {"member": member})
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        await self.run_hook('member_update', {"before": before, "after": after})
+
+    @commands.Cog.listener()
+    async def on_user_update(self, before, after):
+        await self.run_hook('user_update', {"before": before, "after": after})
+
+    @commands.Cog.listener()
+    async def on_guild_role_create(self, role):
+        await self.run_hook('guild_role_create', {"role": role})
+
+    @commands.Cog.listener()
+    async def on_guild_role_delete(self, role):
+        await self.run_hook('guild_role_delete', {"role": role})
+
+    @commands.Cog.listener()
+    async def on_guild_role_update(self, before, after):
+        await self.run_hook('guild_role_update', {"before": before, "after": after})
+
+    @commands.Cog.listener()
+    async def on_guild_emojis_update(self, guild, before, after):
+        await self.run_hook('guild_emojis_update', {"guild": guild, "before": before, "after": after})
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        await self.run_hook('voice_state_update', {"member": member, "before": before, "after": after})
+
+    @commands.Cog.listener()
+    async def on_member_ban(self, guild, user):
+        await self.run_hook('member_ban', {"guild": guild, "user": user})
+
+    @commands.Cog.listener()
+    async def on_member_unban(self, guild, user):
+        await self.run_hook('member_unban', {"guild": guild, "user": user})
 
 
 def setup(bot: commands.Bot):
-    bot.add_cog(Extensibility(bot))
+    z = Extensibility(bot)
+    bot.add_cog(z)
