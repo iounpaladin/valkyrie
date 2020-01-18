@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from valkyrie.datastore import Datastore
+from datastore import Datastore
 
 
 class Starboard(commands.Cog):
@@ -87,7 +87,7 @@ class Starboard(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, data: discord.RawReactionActionEvent):
         if self.settings.get(data.guild_id):
-            if (self.settings.get(data.guild_id)["bans"] and data.channel_id in self.settings.get(data.guild_id)[
+            if ("bans" in self.settings.get(data.guild_id) and data.channel_id in self.settings.get(data.guild_id)[
                 "bans"]) \
                     or data.emoji.name != '⭐':
                 return
@@ -121,7 +121,7 @@ class Starboard(commands.Cog):
                     msg: discord.Message = await (
                         await self.bot.fetch_channel(self.settings.get(data.guild_id)["channel"])).send(
                         f"{self.fmt(message.content)}\n- "
-                        f"{message.author.display_name}, {rxn.count} stars")
+                        f"{message.author.mention}, {message.channel.mention}, {rxn.count} stars")
 
                     new_ = self.settings.get(data.guild_id)
                     new_["messages"][data.message_id] = [
