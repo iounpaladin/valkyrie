@@ -106,7 +106,7 @@ class Extensibility(commands.Cog):
     def canonicalize(j):
         if isinstance(j, discord.Guild):
             return j.name
-        elif isinstance(j, discord.User):
+        elif isinstance(j, discord.User) or isinstance(j, discord.Member):
             return f'{j.display_name} ({j.id})'
         elif isinstance(j, discord.TextChannel):
             return f'{j.name} in {j.category.name}'
