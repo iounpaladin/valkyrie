@@ -144,7 +144,7 @@ class Extensibility(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
-        await self.run_hook('message_delete', {"message": message})
+        await self.run_hook('message_delete', {"message": message, "author": message.author})
 
     @commands.Cog.listener()
     async def on_bulk_message_delete(self, messages):
