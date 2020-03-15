@@ -1,11 +1,21 @@
 import inspect
+import json
+import pickle
 import string
+import urllib
 
 import discord
 import typing
-from discord.ext import commands
 
+import requests
+from discord.ext import commands
 from valkyrie.datastore import Datastore
+
+
+with open('../.GAE_TOKEN') as f:
+    GAE_TOKEN = f.read().rstrip()
+
+endpoint = 'https://valkyrie.structbuilders.com/data'
 
 
 async def fmt(list_, ctx: commands.Context):
@@ -94,6 +104,16 @@ class Extensibility(commands.Cog):
         for i in hash_.keys():
             await ctx.send(f"{i} -> {await fmt(hash_[i], ctx)}")
 
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    async def verify(self, ctx: commands.Context, *, email: str):
+        requests.post(endpoint + '/verify', {
+            'guild_id': ctx.guild.id,
+            'email': email,
+            '__token': GAE_TOKEN
+        })
+
     def check_hook(self, hook, where):
         if hook not in self.valid_hooks:
             return f"Hook {hook} not found!"
@@ -131,6 +151,9 @@ class Extensibility(commands.Cog):
 
         for i, j in args_for_hook.items():
             args_for_hook[i] = Extensibility.canonicalize(j)
+
+        # Dump to DB
+        self.dump_db(hook_name, guild_id, args_for_hook)
 
         if self.data.get(guild_id):
             if hook_name in self.data.get(guild_id):
@@ -225,6 +248,14 @@ class Extensibility(commands.Cog):
     @commands.Cog.listener()
     async def on_member_unban(self, guild, user):
         await self.run_hook('member_unban', {"guild": guild, "user": user})
+
+    def dump_db(self, table, guild_id, args):
+        requests.post(endpoint, {
+            'table': table,
+            'guild_id': guild_id,
+            'args': urllib.parse.urlencode(args),
+            '__token': GAE_TOKEN
+        })
 
 
 def setup(bot: commands.Bot):

@@ -1,2 +1,4 @@
 .TOKEN
+.GAE_TOKEN
 *.pkl
+valkyrie/*.pkl
