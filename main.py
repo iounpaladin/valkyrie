@@ -44,6 +44,8 @@ async def determine_prefix(bot, message):
     else:
         ret = default_prefixes
 
+    ret = [x for x in ret if x]
+
     if message.author.id == 447068325856542721:
         ret.append("")
 
