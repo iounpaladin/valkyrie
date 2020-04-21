@@ -97,7 +97,9 @@ class QuickPoll(commands.Cog):
         msg: discord.Message = await channel.fetch_message(message)
         ctx: commands.Context = await self.bot.get_context(msg)
 
-        if len(msg.embeds) == 0 or msg.author != ctx.me or member == ctx.me:
+        if len(msg.embeds) == 0 \
+                or msg.author.id not in [ctx.me.id, 525348802354216982] \
+                or member == ctx.me:
             return
 
         embed: discord.Embed = msg.embeds[0]
