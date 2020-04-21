@@ -11,9 +11,14 @@ import requests
 from discord.ext import commands
 from valkyrie.datastore import Datastore
 
+PRODUCTION = 'generic' in str(__import__('platform').platform())
 
-with open('../.GAE_TOKEN') as f:
-    GAE_TOKEN = f.read().rstrip()
+
+if PRODUCTION:
+    with open('../.GAE_TOKEN') as f:
+        GAE_TOKEN = f.read().rstrip()
+else:
+    GAE_TOKEN = ""
 
 endpoint = 'https://valkyrie.structbuilders.com/data'
 
@@ -108,6 +113,7 @@ class Extensibility(commands.Cog):
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     async def verify(self, ctx: commands.Context, *, email: str):
+        if not PRODUCTION: return
         requests.post(endpoint + '/verify', {
             'guild_id': ctx.guild.id,
             'email': email,

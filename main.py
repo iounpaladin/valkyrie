@@ -34,7 +34,7 @@ class Bot(AutoShardedBot):
 
 
 with open('.TOKEN') as f:
-    TOKEN = f.read().rstrip()
+    TOKEN = f.readline().rstrip()
 
 
 async def determine_prefix(bot, message):
