@@ -2,3 +2,4 @@ discord.py
 jishaku
 requests
 bs4
+markovify
