@@ -213,9 +213,9 @@ class Extensibility(commands.Cog):
     async def on_member_remove(self, member):
         await self.run_hook('member_remove', {"member": member})
 
-    @commands.Cog.listener()
-    async def on_member_update(self, before, after):
-        await self.run_hook('member_update', {"before": before, "after": after})
+#    @commands.Cog.listener()
+#    async def on_member_update(self, before, after):
+#        await self.run_hook('member_update', {"before": before, "after": after})
 
     @commands.Cog.listener()
     async def on_user_update(self, before, after):
