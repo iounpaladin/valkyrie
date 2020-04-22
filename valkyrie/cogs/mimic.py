@@ -16,11 +16,11 @@ class Mimic(commands.Cog):
 
         if self.chains.get(id):
             self.chains.set(id,
-                            markovify.combine([markovify.Text(message.content, retain_original=False),
-                                               markovify.Text.from_json(self.chains.get(id))]).to_json()
+                            markovify.combine([markovify.NewlineText(message.content, retain_original=False, well_formed=False),
+                                               markovify.NewlineText.from_json(self.chains.get(id))]).to_json()
                             )
         else:
-            self.chains.set(id, markovify.Text(message.content, retain_original=False).to_json())
+            self.chains.set(id, markovify.NewlineText(message.content, retain_original=False, well_formed=False).to_json())
 
     @commands.command()
     async def mimic(self, ctx: commands.Context, user: discord.User, nsentences: int = 1):
