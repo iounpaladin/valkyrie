@@ -64,7 +64,7 @@ class Lobby:
 
         # === MAIN GAME LOGIC ===
         role_obj_list = [get_role(x) for x in self.roles]
-        wake_order = sorted(list(set(filter(lambda x: x.wake_id, role_obj_list))), key=lambda x: x.wake_id)
+        wake_order = sorted(list(set(filter(lambda x: x.wake_id, ROLES))), key=lambda x: x.wake_id)
         random.shuffle(role_obj_list)
 
         centre = [role_obj_list.pop(), role_obj_list.pop(), role_obj_list.pop()]
@@ -95,26 +95,29 @@ class Lobby:
                         "or two numbers (space separated) if you would like to view cards from the centre."
                         f"\nPlayers (for reference): {', '.join(list(map(lambda x: '[' + str(self.players.index(x) + 1) + '] ' + x.display_name, self.players)))}")
                     resp = await self.get_response_by(players_for_role, message.channel)
-                    v = resp.content.strip(string.ascii_letters).split()
-
-                    if len(v) > 1:  # Did they select two centre cards?
-                        try:
-                            a = centre[int(v[0]) - 1]
-                            b = centre[int(v[1]) - 1]
-                            await player.send(f"You see the following centre cards: {a.name}, {b.name}.")
-                        except:
-                            await player.send("Invalid selection!")
+                    if resp is None:
+                        await player.send("You made no selection!")
                     else:
-                        try:
-                            a = self.players[int(v[0]) - 1]
-                            b = [
-                                y[0] for y in player_and_role_list
-                                if y[1].id == a.id
-                            ][0]
+                        v = resp.content.strip(string.ascii_letters).split()
 
-                            await player.send(f"You see {a.display_name}'s card: {b.name}.")
-                        except:
-                            await player.send("Invalid selection!")
+                        if len(v) > 1:  # Did they select two centre cards?
+                            try:
+                                a = centre[int(v[0]) - 1]
+                                b = centre[int(v[1]) - 1]
+                                await player.send(f"You see the following centre cards: {a.name}, {b.name}.")
+                            except:
+                                await player.send("Invalid selection!")
+                        else:
+                            try:
+                                a = self.players[int(v[0]) - 1]
+                                b = [
+                                    y[0] for y in player_and_role_list
+                                    if y[1].id == a.id
+                                ][0]
+
+                                await player.send(f"You see {a.display_name}'s card: {b.name}.")
+                            except:
+                                await player.send("Invalid selection!")
 
                 elif i.name == WEREWOLF[0]:
                     for p in players_for_role:
@@ -125,13 +128,16 @@ class Lobby:
                         message = await player.send(
                             "As the Lone Werewolf, you may peek at a centre card.")
                         resp = await self.get_response_by(players_for_role, message.channel)
-                        v = resp.content.strip(string.ascii_letters)
+                        if resp is None:
+                            await player.send("You made no selection!")
+                        else:
+                            v = resp.content.strip(string.ascii_letters)
 
-                        try:
-                            a = centre[int(v) - 1]
-                            await player.send(f"You see the following centre card: {a.name}.")
-                        except:
-                            await player.send("Invalid selection!")
+                            try:
+                                a = centre[int(v) - 1]
+                                await player.send(f"You see the following centre card: {a.name}.")
+                            except:
+                                await player.send("Invalid selection!")
                 elif i.name == MINION[0]:
                     await player.send(
                         f"You see the Werewolves are: {', '.join(map(lambda x: x.display_name, [y[1] for y in player_and_role_list if y[0].name == WEREWOLF[0]]))}.")
@@ -144,42 +150,48 @@ class Lobby:
                         "Select another player to swap cards with (type their number)."
                         f"\nPlayers (for reference): {', '.join(list(map(lambda x: '[' + str(self.players.index(x) + 1) + '] ' + x.display_name, self.players)))}")
                     resp = await self.get_response_by(players_for_role, message.channel)
-                    v = resp.content.strip(string.ascii_letters)
+                    if resp is None:
+                        await player.send("You made no selection!")
+                    else:
+                        v = resp.content.strip(string.ascii_letters)
 
-                    try:
-                        a = int(v) - 1
+                        try:
+                            a = int(v) - 1
 
-                        b = player_and_role_list.index((i, player))
+                            b = player_and_role_list.index((i, player))
 
-                        assert a != b
+                            assert a != b
 
-                        cache_a_role = player_and_role_list[a][0]
-                        player_and_role_list[a] = (player_and_role_list[b][0], player_and_role_list[a][1])
-                        player_and_role_list[b] = (cache_a_role, player_and_role_list[b][1])
+                            cache_a_role = player_and_role_list[a][0]
+                            player_and_role_list[a] = (player_and_role_list[b][0], player_and_role_list[a][1])
+                            player_and_role_list[b] = (cache_a_role, player_and_role_list[b][1])
 
-                        await player.send(f"You see your role as {player_and_role_list[b][0].name}.")
-                    except:
-                        await player.send("Invalid selection!")
+                            await player.send(f"You see your role as {player_and_role_list[b][0].name}.")
+                        except:
+                            await player.send("Invalid selection!")
                 elif i.name == TROUBLEMAKER[0]:
                     message = await player.send(
                         "Select two other players to swap cards (type their numbers, space separated)."
                         f"\nPlayers (for reference): {', '.join(list(map(lambda x: '[' + str(self.players.index(x) + 1) + '] ' + x.display_name, self.players)))}")
                     resp = await self.get_response_by(players_for_role, message.channel)
-                    v = resp.content.strip(string.ascii_letters).split()
+                    if resp is None:
+                        await player.send("You made no selection!")
+                    else:
+                        v = resp.content.strip(string.ascii_letters).split()
 
-                    try:
-                        a = int(v[0]) - 1
-                        b = int(v[1]) - 1
+                        try:
+                            a = int(v[0]) - 1
+                            b = int(v[1]) - 1
 
-                        idx = player_and_role_list.index((i, player))
+                            idx = player_and_role_list.index((i, player))
 
-                        assert a != idx and b != idx and a != b
+                            assert a != idx and b != idx and a != b
 
-                        cache_a_role = player_and_role_list[a][0]
-                        player_and_role_list[a] = (player_and_role_list[b][0], player_and_role_list[a][1])
-                        player_and_role_list[b] = (cache_a_role, player_and_role_list[b][1])
-                    except:
-                        await player.send("Invalid selection!")
+                            cache_a_role = player_and_role_list[a][0]
+                            player_and_role_list[a] = (player_and_role_list[b][0], player_and_role_list[a][1])
+                            player_and_role_list[b] = (cache_a_role, player_and_role_list[b][1])
+                        except:
+                            await player.send("Invalid selection!")
                 elif i.name == INSOMNIAC[0]:
                     b = [
                         y[0] for y in player_and_role_list
@@ -190,10 +202,12 @@ class Lobby:
                     message = await player.send(
                         "Select a centre card to swap with.")
                     resp = await self.get_response_by(players_for_role, message.channel)
-                    v = resp.content.strip(string.ascii_letters)
+                    if resp is None:
+                        v = 1
+                    else:
+                        v = resp.content.strip(string.ascii_letters)
 
                     try:
-                        if v is None: v = 1
                         card = centre[int(v) - 1]
                         await player.send(f"You swap your card with centre card #{v}.")
 
