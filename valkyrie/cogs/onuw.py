@@ -18,7 +18,7 @@ def create_lobby_message(lobby):
 
 
 def verify_roles(roles):
-    return all(list(map(lambda x: get_role(x) is not None, roles)))  # TODO: use max_count
+    return all(list(map(lambda x: get_role(x) is not None, roles))) and len(roles) > 5  # TODO: use max_count
 
 
 class ONUW(commands.Cog):
@@ -28,6 +28,9 @@ class ONUW(commands.Cog):
     @commands.command()
     async def create_lobby(self, ctx: commands.Context, *, roles_list: str):
         global LOBBY, LOBBY_MESSAGE
+        if LOBBY and LOBBY.completed:
+            await self.destroy_lobby()
+
         if not LOBBY:
             roles = roles_list.split()
             if not verify_roles(roles):
@@ -46,6 +49,7 @@ class ONUW(commands.Cog):
         if LOBBY and await LOBBY.add_player(ctx.author):
             await ctx.send("Joined!")
             await self.edit_lobby_message(ctx)
+            await LOBBY.check_start()
         else:
             await ctx.send("Could not join. Is the lobby full (does it even exist)?")
 
@@ -54,6 +58,8 @@ class ONUW(commands.Cog):
         if LOBBY and await LOBBY.add_player(ctx.author):
             await ctx.send("Left!")
             await self.edit_lobby_message(ctx)
+            if len(LOBBY.players) == 0:
+                await self.destroy_lobby()
         else:
             await ctx.send(
                 "Could not leave. Are you seated in the lobby (does it even exist)? Note: you cannot leave an in-progress lobby.")
@@ -61,10 +67,7 @@ class ONUW(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def destroy(self, ctx: commands.Context):
-        global LOBBY, LOBBY_MESSAGE
-        LOBBY = None
-        await LOBBY_MESSAGE.delete()
-        LOBBY_MESSAGE = None
+        await self.destroy_lobby()
 
     @commands.command()
     @commands.is_owner()
@@ -83,6 +86,12 @@ class ONUW(commands.Cog):
     async def edit_lobby_message(self, ctx):
         if LOBBY_MESSAGE:
             await LOBBY_MESSAGE.edit(content=create_lobby_message(LOBBY))
+
+    async def destroy_lobby(self):
+        global LOBBY, LOBBY_MESSAGE
+        LOBBY = None
+        await LOBBY_MESSAGE.delete()
+        LOBBY_MESSAGE = None
 
 
 def setup(bot):
