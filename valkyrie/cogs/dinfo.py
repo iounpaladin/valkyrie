@@ -6,8 +6,6 @@ from io import BytesIO
 import discord
 from discord.ext import commands
 
-from cogs.utility import deactivatable
-
 
 def fmt(d):
     return d.strftime('%A, %B %e %Y at %H:%M:%S')
