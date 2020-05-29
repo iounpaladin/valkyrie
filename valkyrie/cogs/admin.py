@@ -125,12 +125,12 @@ class Admin(commands.Cog):
         await self.bot.close()
         exit(0)
 
-    @commands.command(name="exec")
-    @commands.check(is_owner)
-    async def exec_(self, ctx: commands.Context, *, msg: str):
-        """Executes Python (3.7.1)."""
-        exec(msg)
-        await ctx.send("Evaluated.")
+    # @commands.command(name="exec")
+    # @commands.check(is_owner)
+    # async def exec_(self, ctx: commands.Context, *, msg: str):
+    #     """Executes Python (3.7.1)."""
+    #     exec(msg)
+    #     await ctx.send("Evaluated.")
 
     @commands.command(name="exec-async")
     @commands.check(is_owner)
