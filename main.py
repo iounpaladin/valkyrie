@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import discord
-from discord.ext.commands import AutoShardedBot, when_mentioned_or
+from discord.ext.commands import AutoShardedBot, when_mentioned_or, CommandNotFound, CommandInvokeError
 from jishaku.help_command import DefaultPaginatorHelp
 
 from valkyrie.data import custom_prefixes, default_prefixes
@@ -31,6 +31,11 @@ class Bot(AutoShardedBot):
                         PINGSOCK = e
 
             await msg.add_reaction(PINGSOCK)
+
+    async def on_command_error(self, context, exception):
+        if not isinstance(exception, CommandNotFound) and not (
+                isinstance(exception, CommandInvokeError) and isinstance(exception.original, discord.HTTPException)):
+            await context.send(exception)
 
 
 with open('.TOKEN') as f:
