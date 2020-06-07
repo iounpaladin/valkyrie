@@ -233,7 +233,8 @@ class Codenames(commands.Cog):
                     await board2.edit(content=format_words(words, markers))
 
             for g in players + [blu_leader, red_leader]:
-                await g.edit(voice_channel=gamevc, mute=False)
+                await g.edit(voice_channel=gamevc)
+                await g.edit(mute=False)
 
             # End of turn cleanup
             turn = not turn
