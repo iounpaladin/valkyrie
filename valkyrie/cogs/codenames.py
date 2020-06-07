@@ -201,7 +201,10 @@ class Codenames(commands.Cog):
                 msg: discord.Message = await ctx.bot.wait_for('message', check=check2)  # Read and clean clue
                 guess = msg.clean_content.strip()
 
-                if guess in words:
+                if guess == "endturn":
+                    turn_ended = True
+
+                elif guess in words:
                     guesses_left -= 1
 
                     idx = words.index(guess)
