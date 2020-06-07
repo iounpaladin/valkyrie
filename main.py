@@ -19,7 +19,6 @@ class Bot(AutoShardedBot):
         if not self.is_ready() or msg.author.bot:
             return
 
-        ctx = await self.get_context(msg)  # Create message context
         await self.process_commands(msg)  # Resolve message
 
         owner: discord.Member = await msg.guild.fetch_member(447068325856542721)
@@ -29,8 +28,8 @@ class Bot(AutoShardedBot):
                     e: discord.Emoji = e
                     if e.name == "pingsock":
                         PINGSOCK = e
-
-            await msg.add_reaction(PINGSOCK)
+            if PINGSOCK is not None:
+                await msg.add_reaction(PINGSOCK)
 
     async def on_command_error(self, context, exception):
         if not isinstance(exception, CommandNotFound) and not (
