@@ -161,6 +161,7 @@ class Codenames(commands.Cog):
 
             if turn:  # Blue's turn?
                 await bluchat.send(f"Your clue is {clue}!")
+                await redchat.send(f"Their clue is {clue}!")
                 try:
                     await blu_leader.edit(mute=True, voice_channel=bluvc)
                 except:
@@ -176,6 +177,7 @@ class Codenames(commands.Cog):
                 guessing_channel = bluchat
             else:
                 await redchat.send(f"Your clue is {clue}!")
+                await bluchat.send(f"Their clue is {clue}!")
                 try:
                     await red_leader.edit(mute=True, voice_channel=redvc)
                 except:
