@@ -6,7 +6,9 @@ import jishaku.paginators as pag
 class Hacks(commands.Cog):
     @commands.command(aliases=["read", "history"])
     @commands.is_owner()
-    async def read_channel(self, ctx: commands.Context, channel: discord.TextChannel, limit: int = 10):
+    async def read_channel(self, ctx: commands.Context, guild: int, channel: int, limit: int = 10):
+        guild: discord.Guild = discord.utils.get(ctx.bot.guilds, id=guild)
+        channel = discord.utils.get(await guild.fetch_channels(), id=channel)
         paginator = commands.Paginator(max_size=1985)
 
         async for x in channel.history(limit=limit):
