@@ -21,15 +21,16 @@ class Bot(AutoShardedBot):
 
         await self.process_commands(msg)  # Resolve message
 
-        owner: discord.Member = await msg.guild.fetch_member(447068325856542721)
-        if owner in msg.mentions or set(owner.roles) & set(msg.role_mentions) or msg.mention_everyone:
-            if PINGSOCK is None:
-                for e in self.emojis:
-                    e: discord.Emoji = e
-                    if e.name == "pingsock":
-                        PINGSOCK = e
-            if PINGSOCK is not None:
-                await msg.add_reaction(PINGSOCK)
+        if msg.guild:
+            owner: discord.Member = await msg.guild.fetch_member(447068325856542721)
+            if owner in msg.mentions or set(owner.roles) & set(msg.role_mentions) or msg.mention_everyone:
+                if PINGSOCK is None:
+                    for e in self.emojis:
+                        e: discord.Emoji = e
+                        if e.name == "pingsock":
+                            PINGSOCK = e
+                if PINGSOCK is not None:
+                    await msg.add_reaction(PINGSOCK)
 
     async def on_command_error(self, context, exception):
         if not isinstance(exception, CommandNotFound) and not (
