@@ -287,7 +287,7 @@ class Lobby:
         # == GAME END ==
 
         await self.message.channel.send("== **GAME END** ==")
-        await self.message.channel.send(f"{death[1].display_name} has been lynched.")
+        await self.message.channel.send(f"{death[1].display_name} has been killed.")
 
         winning_team = ''
 
