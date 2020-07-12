@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 import discord
 from discord.ext import commands
@@ -7,8 +7,9 @@ from discord.ext.commands import Greedy
 from valkyrie.cogs.onenight.lobby import Lobby, get_role
 from valkyrie.cogs.onenight.role import ROLES
 
-LOBBY: Lobby = None
-LOBBY_MESSAGE: discord.Message = None
+CHANNEL_TO_LOBBY: Dict[int, Lobby] = {
+
+}
 
 
 def create_lobby_message(lobby):
@@ -27,71 +28,86 @@ class ONUW(commands.Cog):
 
     @commands.command()
     async def create_lobby(self, ctx: commands.Context, *, roles_list: str):
-        global LOBBY, LOBBY_MESSAGE
-        if LOBBY and LOBBY.completed:
-            await self.destroy_lobby()
+        global CHANNEL_TO_LOBBY
 
-        if not LOBBY:
+        lobby = CHANNEL_TO_LOBBY.get(ctx.channel.id)
+
+        if lobby and lobby.completed:
+            await self.destroy_lobby(ctx)
+
+        if not lobby:
             roles = roles_list.split()
             if not verify_roles(roles):
                 return await ctx.send("This role set is invalid!")
 
-            LOBBY_MESSAGE = await ctx.send(f'Creating lobby with roles: {", ".join(roles)} ...')
-            LOBBY = Lobby(LOBBY_MESSAGE, roles, self.bot)
+            message = await ctx.send(f'Creating lobby with roles: {", ".join(roles)} ...')
+            lobby = Lobby(message, roles, self.bot)
+            CHANNEL_TO_LOBBY[ctx.channel.id] = lobby
 
-            await LOBBY_MESSAGE.edit(content=create_lobby_message(LOBBY))
+            await message.edit(content=create_lobby_message(lobby))
         else:
             await ctx.send(
-                "Sorry, we currently only support one game running on the bot. If you think this is a mistake, have an admin run %destroy.")
+                "Sorry, we currently only support one game per channel running. If you think this is a mistake,"
+                "have your server owner run %destroy in this channel.")
 
     @commands.command(aliases=['join'])
     async def join_lobby(self, ctx: commands.Context):
-        if LOBBY and await LOBBY.add_player(ctx.author):
+        lobby = CHANNEL_TO_LOBBY.get(ctx.channel.id)
+        if lobby and await lobby.add_player(ctx.author):
             await ctx.send("Joined!")
             await self.edit_lobby_message(ctx)
-            await LOBBY.check_start()
+            await lobby.check_start()
         else:
             await ctx.send("Could not join. Is the lobby full (does it even exist)?")
 
     @commands.command(aliases=['leave'])
     async def leave_lobby(self, ctx: commands.Context):
-        if LOBBY and await LOBBY.add_player(ctx.author):
+        lobby = CHANNEL_TO_LOBBY.get(ctx.channel.id)
+        if lobby and await lobby.remove_player(ctx.author):
             await ctx.send("Left!")
             await self.edit_lobby_message(ctx)
-            if len(LOBBY.players) == 0:
-                await self.destroy_lobby()
+            if len(lobby.players) == 0:
+                await self.destroy_lobby(ctx)
         else:
             await ctx.send(
-                "Could not leave. Are you seated in the lobby (does it even exist)? Note: you cannot leave an in-progress lobby.")
+                "Could not leave. Are you seated in the lobby (does it even exist)? "
+                "Note: you cannot leave an in-progress lobby.")
 
     @commands.command()
-    @commands.is_owner()
+    @commands.has_guild_permissions(manage_guild=True)
     async def destroy(self, ctx: commands.Context):
-        await self.destroy_lobby()
+        await self.destroy_lobby(ctx)
 
     @commands.command()
     @commands.is_owner()
     async def _retrigger(self, ctx: commands.Context, members: Greedy[discord.Member]):
-        global LOBBY, LOBBY_MESSAGE
-        roles = "Werewolf Werewolf Seer Tanner Hunter Robber".split()
+        global CHANNEL_TO_LOBBY
+        roles = "Hunter Hunter Hunter Hunter Hunter Hunter".split()  # edit this to whatever role set you wanna test
         if not verify_roles(roles):
             return await ctx.send("This role set is invalid!")
 
-        LOBBY_MESSAGE = await ctx.send(f'Creating lobby with roles: {", ".join(roles)} ...')
-        LOBBY = Lobby(LOBBY_MESSAGE, roles, self.bot)
+        message = await ctx.send(f'Creating lobby with roles: {", ".join(roles)} ...')
+        lobby = Lobby(message, roles, self.bot)
+        CHANNEL_TO_LOBBY[ctx.channel.id] = lobby
 
         for i in members + [ctx.author]:
-            await LOBBY.add_player(i)
+            await lobby.add_player(i)
+
+        await lobby.check_start()
 
     async def edit_lobby_message(self, ctx):
-        if LOBBY_MESSAGE:
-            await LOBBY_MESSAGE.edit(content=create_lobby_message(LOBBY))
+        lobby = CHANNEL_TO_LOBBY.get(ctx.channel.id)
+        message = lobby.message
 
-    async def destroy_lobby(self):
-        global LOBBY, LOBBY_MESSAGE
-        LOBBY = None
-        await LOBBY_MESSAGE.delete()
-        LOBBY_MESSAGE = None
+        if message:
+            await message.edit(content=create_lobby_message(lobby))
+
+    async def destroy_lobby(self, ctx):
+        global CHANNEL_TO_LOBBY
+        lobby = CHANNEL_TO_LOBBY[ctx.channel.id]
+        lobby.cancel()
+        await lobby.message.delete()
+        del CHANNEL_TO_LOBBY[ctx.channel.id]
 
 
 def setup(bot):

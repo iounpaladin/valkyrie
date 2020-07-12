@@ -4,6 +4,7 @@ import string
 from typing import List, Union, Tuple
 
 import discord
+from discord.ext import commands
 
 from valkyrie.cogs.onenight.role import *
 
@@ -21,6 +22,7 @@ class Lobby:
     __playercount: int
     started: bool = False
     client: discord.Client = None
+    task = None
 
     def __init__(self, msg, roles, client):
         self.message = msg
@@ -41,7 +43,7 @@ class Lobby:
     async def check_start(self):
         if len(self.players) == self.__playercount:
             self.started = True
-            await self.start()
+            self.task = self.client.loop.create_task(self.start())
 
     async def remove_player(self, player):
         if self.started: return False
@@ -53,6 +55,10 @@ class Lobby:
 
     def get_max_players(self):
         return self.__playercount
+
+    def cancel(self):
+        if self.task: self.task.cancel()
+        self.task = None
 
     async def get_response_by(self, by: List[discord.User], in_: discord.TextChannel, extra_parse=None):
         def check(m):
@@ -283,11 +289,20 @@ class Lobby:
         col = collections.Counter(votes.values())
 
         death = player_and_role_list[col.most_common()[0][0]]
+        deaths = [death]
 
         # == GAME END ==
 
         await self.message.channel.send("== **GAME END** ==")
         await self.message.channel.send(f"{death[1].display_name} has been killed.")
+        vote_block = ""
+
+        for v in votes.keys():
+            vote_block += f"+ {v.display_name} (voted for {col[self.players.index(v)]} time{'' if col[self.players.index(v)] == 1 else 's'}) voted for {self.players[votes[v]].display_name}\n"
+
+        await self.message.channel.send(vote_block)
+        # await self.message.channel.send(votes)
+        # await self.message.channel.send(col)
 
         winning_team = ''
 
@@ -310,6 +325,16 @@ class Lobby:
 
                 await self.message.channel.send(f'{player_and_role_list[votes[death[1]]][1].display_name} was shot by the Hunter.')
                 death = player_and_role_list[votes[death[1]]]
+                if death not in deaths:
+                    deaths.append(death)
+                else:  # The only way for this to happen is if two Hunters kill each other (?)
+                    await self.message.channel.send("But they were already dead!")
+                    winning_team = 'Werewolves'
+                    reason = 'Multiple villagers have been killed'
+                    winners = [
+                        x[1].display_name for x in player_and_role_list
+                        if x[0].ww
+                    ]
             else:
                 winning_team = 'Werewolves'
                 reason = 'A Villager has been killed'
@@ -321,6 +346,10 @@ class Lobby:
         await asyncio.sleep(2)
 
         await self.message.channel.send(f"== {reason}. {winning_team} win the game. ==")
+
+        if len(deaths) == self.__playercount:
+            await self.message.channel.send("The Village has been massacred.")
+
         await self.message.channel.send(f"Winners: {', '.join(winners)}.")
 
         await self.message.channel.send(
