@@ -47,7 +47,7 @@ class ONUW(commands.Cog):
             await message.edit(content=create_lobby_message(lobby))
         else:
             await ctx.send(
-                "Sorry, we currently only support one game per channel running. If you think this is a mistake,"
+                "Sorry, we currently only support one game per channel running. If you think this is a mistake, "
                 "have your server owner run %destroy in this channel.")
 
     @commands.command(aliases=['join'])

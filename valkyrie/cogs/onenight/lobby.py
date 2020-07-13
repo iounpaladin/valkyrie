@@ -291,7 +291,7 @@ class Lobby:
         pick = col.most_common()[0]
         if pick[1] == 1:
             winning_team = 'Villagers'
-            reason = 'A Werewolf has been killed'
+            reason = 'A villager did not die'
             winners = [
                 x[1].display_name for x in player_and_role_list
                 if x[0].village
