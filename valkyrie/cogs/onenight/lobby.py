@@ -288,13 +288,27 @@ class Lobby:
 
         col = collections.Counter(votes.values())
 
-        death = player_and_role_list[col.most_common()[0][0]]
+        pick = col.most_common()[0]
+        if pick[1] == 1:
+            winning_team = 'Villagers'
+            reason = 'A Werewolf has been killed'
+            winners = [
+                x[1].display_name for x in player_and_role_list
+                if x[0].village
+            ]
+            death = None
+        else:
+            winning_team = ''
+            death = player_and_role_list[col.most_common()[0][0]]
         deaths = [death]
 
         # == GAME END ==
 
         await self.message.channel.send("== **GAME END** ==")
-        await self.message.channel.send(f"{death[1].display_name} has been killed.")
+        if death:
+            await self.message.channel.send(f"{death[1].display_name} has been killed.")
+        else:
+            await self.message.channel.send("Nobody has died!")
         vote_block = ""
 
         for v in votes.keys():
@@ -303,8 +317,6 @@ class Lobby:
         await self.message.channel.send(vote_block)
         # await self.message.channel.send(votes)
         # await self.message.channel.send(col)
-
-        winning_team = ''
 
         while not winning_team:
             if death[0].name == TANNER[0]:
